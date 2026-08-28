@@ -8,7 +8,6 @@ Application web d'arbre généalogique développée avec Symfony et Docker.
 - Gestion des individus (ajout, modification, suppression)
 - Liens parentaux (père/mère/enfant)
 - Mariages multiples
-- Ancêtres lointains
 - Galerie d'images et conteneur de fichiers (BnineFilesBundle)
 - Photo de profil avec crop
 - Recherche d'individus

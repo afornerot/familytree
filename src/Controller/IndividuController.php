@@ -224,9 +224,6 @@ class IndividuController extends AbstractController
                 $mariage->setIndividu2($cible);
                 $em->persist($mariage);
                 break;
-            case 'ancetre':
-                $cible->setAncetreLointain($individu);
-                break;
             default:
                 return new JsonResponse(['success' => false, 'error' => 'Type de lien inconnu.'], 400);
         }

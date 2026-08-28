@@ -21,7 +21,6 @@ class IndividuRepository extends ServiceEntityRepository
         return $this->createQueryBuilder('i')
             ->where('i.pere IS NULL')
             ->andWhere('i.mere IS NULL')
-            ->andWhere('i.ancetreLointain IS NULL')
             ->orderBy('i.nomNaissance', 'ASC')
             ->getQuery()
             ->getResult();

@@ -500,6 +500,19 @@ b {
     color: var(--bs-body-color, #dee2e6) !important;
 }
 
+#MiniTree {
+    width: 100%;
+    height: 400px;
+    position: relative;
+}
+
+#MiniTree .f3.f3-cont {
+    height: 400px;
+    max-height: 400px;
+}
+
+.mini-tree .card_cont { cursor: pointer; }
+
 /* Panneau orphelins */
 
 .tree-toolbar {

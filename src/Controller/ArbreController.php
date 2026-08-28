@@ -104,6 +104,103 @@ class ArbreController extends AbstractController
         return new JsonResponse($nodes);
     }
 
+    #[Route('/individu/{id}/family-data', name: 'app_individu_family_data')]
+    public function individuData(int $id, EntityManagerInterface $em): JsonResponse
+    {
+        $individu = $em->getRepository(Individu::class)->find($id);
+        if (!$individu) {
+            return new JsonResponse(['error' => 'Individu non trouvé.'], 404);
+        }
+
+        $allIds = [$individu];
+
+        if ($individu->getPere()) $allIds[] = $individu->getPere();
+        if ($individu->getMere()) $allIds[] = $individu->getMere();
+
+        foreach ($individu->getTousLesMariages() as $m) {
+            $allIds[] = $m->getIndividu1();
+            $allIds[] = $m->getIndividu2();
+        }
+
+        foreach ($individu->getTousLesEnfants() as $e) {
+            $allIds[] = $e;
+        }
+
+        $unique = [];
+        foreach ($allIds as $i) {
+            $unique[$i->getId()] = $i;
+        }
+
+        $spousesOf = [];
+        $childrenOf = [];
+        $parentsOf = [];
+
+        foreach ($individu->getTousLesMariages() as $m) {
+            $id1 = (string) $m->getIndividu1()->getId();
+            $id2 = (string) $m->getIndividu2()->getId();
+            $spousesOf[$id1][] = $id2;
+            $spousesOf[$id2][] = $id1;
+        }
+
+        foreach ($unique as $i) {
+            $iid = (string) $i->getId();
+            if ($i->getPere() && isset($unique[$i->getPere()->getId()])) {
+                $pid = (string) $i->getPere()->getId();
+                $parentsOf[$iid][] = $pid;
+                $childrenOf[$pid][] = $iid;
+            }
+            if ($i->getMere() && isset($unique[$i->getMere()->getId()])) {
+                $mid = (string) $i->getMere()->getId();
+                $parentsOf[$iid][] = $mid;
+                $childrenOf[$mid][] = $iid;
+            }
+        }
+
+        foreach ($spousesOf as $sid => $spouses) {
+            if (isset($unique[$sid]) && empty($childrenOf[$sid])) {
+                $childrenOf[$sid] = [];
+            }
+            foreach ($spouses as $s) {
+                if (!empty($childrenOf[$s])) {
+                    foreach ($childrenOf[$s] as $childId) {
+                        if (!isset($childrenOf[$sid]) || !in_array($childId, $childrenOf[$sid])) {
+                            $childrenOf[$sid][] = $childId;
+                        }
+                    }
+                }
+            }
+        }
+
+        $nodes = [];
+        foreach ($unique as $i) {
+            $iid = (string) $i->getId();
+            $nodes[] = [
+                'id' => $iid,
+                'data' => [
+                    'gender' => $i->getSexe() ?: 'M',
+                    'first name' => trim(implode(' ', array_filter([
+                        $i->getPrenom1(),
+                        $i->getPrenom2(),
+                        $i->getPrenom3(),
+                    ]))),
+                    'last name' => $i->getNomNaissance() ?: '',
+                    'nom complet' => $i->getNomComplet(),
+                    'birthday' => $i->getDateNaissance() ? $i->getDateNaissance()->format('d/m/Y') : '',
+                    'death' => $i->getDateDeces() ? $i->getDateDeces()->format('d/m/Y') : '',
+                    'lieu naissance' => $i->getLieuNaissance() ?: '',
+                    'avatar' => $i->getPhoto() ?: '',
+                ],
+                'rels' => [
+                    'parents' => $parentsOf[$iid] ?? [],
+                    'spouses' => $spousesOf[$iid] ?? [],
+                    'children' => $childrenOf[$iid] ?? [],
+                ],
+            ];
+        }
+
+        return new JsonResponse($nodes);
+    }
+
     #[Route('/arbre/orphelins', name: 'app_arbre_orphelins')]
     public function orphelins(IndividuRepository $individuRepository): JsonResponse
     {

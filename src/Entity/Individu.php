@@ -55,17 +55,11 @@ class Individu
     #[ORM\ManyToOne(targetEntity: Individu::class, inversedBy: 'enfantsMere')]
     private ?Individu $mere = null;
 
-    #[ORM\ManyToOne(targetEntity: Individu::class, inversedBy: 'ascendantDe')]
-    private ?Individu $ancetreLointain = null;
-
     #[ORM\OneToMany(targetEntity: Individu::class, mappedBy: 'pere')]
     private Collection $enfantsPere;
 
     #[ORM\OneToMany(targetEntity: Individu::class, mappedBy: 'mere')]
     private Collection $enfantsMere;
-
-    #[ORM\OneToMany(targetEntity: Individu::class, mappedBy: 'ancetreLointain')]
-    private Collection $ascendantDe;
 
     #[ORM\OneToMany(targetEntity: Mariage::class, mappedBy: 'individu1', orphanRemoval: true)]
     private Collection $mariagesIndividu1;
@@ -83,7 +77,6 @@ class Individu
     {
         $this->enfantsPere = new ArrayCollection();
         $this->enfantsMere = new ArrayCollection();
-        $this->ascendantDe = new ArrayCollection();
         $this->mariagesIndividu1 = new ArrayCollection();
         $this->mariagesIndividu2 = new ArrayCollection();
         $this->createdAt = new \DateTimeImmutable();
@@ -245,18 +238,6 @@ class Individu
         return $this;
     }
 
-    public function getAncetreLointain(): ?Individu
-    {
-        return $this->ancetreLointain;
-    }
-
-    public function setAncetreLointain(?Individu $ancetreLointain): static
-    {
-        $this->ancetreLointain = $ancetreLointain;
-
-        return $this;
-    }
-
     /**
      * @return Collection<int, Individu>
      */
@@ -309,35 +290,6 @@ class Individu
         if ($this->enfantsMere->removeElement($enfantMere)) {
             if ($enfantMere->getMere() === $this) {
                 $enfantMere->setMere(null);
-            }
-        }
-
-        return $this;
-    }
-
-    /**
-     * @return Collection<int, Individu>
-     */
-    public function getAscendantDe(): Collection
-    {
-        return $this->ascendantDe;
-    }
-
-    public function addAscendantDe(Individu $ascendantDe): static
-    {
-        if (!$this->ascendantDe->contains($ascendantDe)) {
-            $this->ascendantDe->add($ascendantDe);
-            $ascendantDe->setAncetreLointain($this);
-        }
-
-        return $this;
-    }
-
-    public function removeAscendantDe(Individu $ascendantDe): static
-    {
-        if ($this->ascendantDe->removeElement($ascendantDe)) {
-            if ($ascendantDe->getAncetreLointain() === $this) {
-                $ascendantDe->setAncetreLointain(null);
             }
         }
 

@@ -89,16 +89,7 @@ class IndividuType extends AbstractType
                 'placeholder' => '-- Sélectionner une mère --',
                 'attr' => ['class' => 'form-select select2-search'],
             ])
-            ->add('ancetreLointain', EntityType::class, [
-                'label' => 'Ancêtre lointain (rattachement)',
-                'class' => Individu::class,
-                'choice_label' => function (Individu $individu) {
-                    return $individu->getNomComplet();
-                },
-                'required' => false,
-                'placeholder' => '-- Aucun ancêtre lointain --',
-                'attr' => ['class' => 'form-select select2-search'],
-            ])
+
         ;
 
         if (!$isNew) {

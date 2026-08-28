@@ -42,7 +42,6 @@
                 <button class="link-type-btn text-start p-3 rounded" data-value="mere" id="linkTypeMother"><i class="fas fa-venus text-danger fa-lg me-2"></i><strong id="linkLabelMere"></strong><div class="small mt-1" id="linkDescMere" style="color:rgba(222,226,230,0.5)"></div></button>
                 <button class="link-type-btn text-start p-3 rounded" data-value="fils" id="linkTypeChild"><i class="fas fa-child text-info fa-lg me-2"></i><strong id="linkLabelEnfant"></strong><div class="small mt-1" id="linkDescEnfant" style="color:rgba(222,226,230,0.5)"></div></button>
                 <button class="link-type-btn text-start p-3 rounded" data-value="conjoint" id="linkTypeSpouse"><i class="fas fa-heart text-danger fa-lg me-2"></i><strong id="linkLabelConjoint"></strong><div class="small mt-1" id="linkDescConjoint" style="color:rgba(222,226,230,0.5)"></div></button>
-                <button class="link-type-btn text-start p-3 rounded" data-value="ancetre" id="linkTypeAncestor"><i class="fas fa-arrow-up text-warning fa-lg me-2"></i><strong id="linkLabelAncetre"></strong><div class="small mt-1" id="linkDescAncetre" style="color:rgba(222,226,230,0.5)"></div></button>
             </div>
             <div class="d-flex gap-2 mt-3">
                 <button class="btn btn-success" id="linkModalConfirm"><i class="fas fa-check"></i> Valider</button>
@@ -190,7 +189,7 @@
             linkModalContext = { nodeId, mode };
             selectedLinkType = null;
             document.querySelectorAll('.link-type-btn').forEach(b => b.classList.remove('active'));
-            ['linkTypeParent', 'linkTypeMother', 'linkTypeChild', 'linkTypeSpouse', 'linkTypeAncestor'].forEach(id => document.getElementById(id).style.display = 'block');
+            ['linkTypeParent', 'linkTypeMother', 'linkTypeChild', 'linkTypeSpouse'].forEach(id => document.getElementById(id).style.display = 'block');
             document.getElementById('linkModalOptions').style.display = 'flex';
             const f = document.getElementById('linkVisualFrom'), a = document.getElementById('linkVisualArrow'), t = document.getElementById('linkVisualTo');
             const tn = personName(nodeId);
@@ -202,19 +201,12 @@
                 document.getElementById('linkDescPere').textContent = 'L\'enfant sera lié comme fils.';
                 document.getElementById('linkLabelMere').textContent = tn + ' est la mère';
                 document.getElementById('linkDescMere').textContent = 'L\'enfant sera lié comme fille.';
-                ['linkTypeChild', 'linkTypeSpouse', 'linkTypeAncestor'].forEach(id => document.getElementById(id).style.display = 'none');
+                ['linkTypeChild', 'linkTypeSpouse'].forEach(id => document.getElementById(id).style.display = 'none');
             } else if (mode === 'add_spouse') {
                 document.getElementById('linkModalTitle').textContent = 'Nouveau conjoint de ' + tn;
                 document.getElementById('linkModalDesc').textContent = 'Le conjoint sera créé et lié par un mariage.';
                 f.textContent = tn; a.innerHTML = '<i class="fas fa-heart"></i>'; t.textContent = 'Conjoint';
                 document.getElementById('linkModalOptions').style.display = 'none';
-            } else if (mode === 'attach_ancestor') {
-                document.getElementById('linkModalTitle').textContent = 'Rattacher un ancêtre';
-                document.getElementById('linkModalDesc').textContent = 'Sélectionnez le type de lien :';
-                f.textContent = 'Ancêtre'; a.innerHTML = '<i class="fas fa-arrow-up"></i>'; t.textContent = tn;
-                document.getElementById('linkLabelAncetre').textContent = tn + ' descend de cet ancêtre';
-                document.getElementById('linkDescAncetre').textContent = 'Lien de descendance sans lignée complète.';
-                ['linkTypeParent', 'linkTypeMother', 'linkTypeChild', 'linkTypeSpouse'].forEach(id => document.getElementById(id).style.display = 'none');
             }
             document.getElementById('linkModal').classList.add('active');
         }
@@ -222,7 +214,7 @@
 
         async function confirmLink() {
             const { nodeId, mode } = linkModalContext;
-            if (mode === 'add_child' || mode === 'attach_ancestor') {
+            if (mode === 'add_child') {
                 if (!selectedLinkType) { alert('Sélectionnez un type.'); return; }
                 const cid = prompt('ID de l\'individu cible :'); if (!cid) return;
                 const r = await fetch('/admin/individu/' + nodeId + '/lier', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ typeLien: selectedLinkType, cibleId: parseInt(cid) }) });
