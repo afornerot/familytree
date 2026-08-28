@@ -130,24 +130,17 @@
                 } catch(e) {}
             });
 
-            const attachContextMenu = () => {
-                document.querySelectorAll('.card_cont, .card_cont .card').forEach(el => {
-                    if (el._ctxAttached) return;
-                    el._ctxAttached = true;
-                    el.addEventListener('contextmenu', function(e) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        let datum = this.__data__;
-                        if (!datum) {
-                            const cont = this.closest('.card_cont');
-                            if (cont) datum = cont.__data__;
-                        }
-                        if (datum && datum.data) showCtx(datum.data, e);
-                    });
-                });
-            };
-            attachContextMenu();
-            f3Chart.setOnUpdate(function() { attachContextMenu(); });
+            document.getElementById('FamilyChart').addEventListener('contextmenu', function(e) {
+                e.preventDefault();
+                let el = e.target;
+                while (el && el.id !== 'FamilyChart') {
+                    if (el.__data__ && el.__data__.data) {
+                        showCtx(el.__data__.data, e);
+                        return;
+                    }
+                    el = el.parentElement || el.parentNode;
+                }
+            }, false);
         }
 
         let ctxEl = null;
