@@ -35,6 +35,7 @@ security:
         csrf_token_id: authenticate
         csrf_parameter: _csrf_token
         default_target_path: /
+        always_use_default_target_path: true
       logout:
         path: app_logout
 
