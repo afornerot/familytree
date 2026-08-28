@@ -1,0 +1,317 @@
+{% extends 'base.html.twig' %}
+
+{% block title %} = {{title}}{% endblock %}
+
+{% block body %}
+    <h1>{{title}}</h1>
+
+    {% if mode == 'modifier' %}
+        <script>localStorage.setItem('familytree_main_id', '{{ individu.id }}');</script>
+    {% endif %}
+
+    {{ form_start(form) }}
+
+        <div class="d-flex mb-3">
+            <button type="submit" class="btn btn-success">
+                <i class="fas fa-save"></i> Enregistrer
+            </button>
+            <a href="{{ path('app_arbre') }}" class="btn btn-secondary ms-2">Annuler</a>
+        </div>
+
+        {% include('include/error.html.twig') %}
+
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <i class="fas fa-user"></i> Identité
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                {{ form_row(form.nomNaissance) }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form_row(form.sexe) }}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4">
+                                {{ form_row(form.prenom1) }}
+                            </div>
+                            <div class="col-md-4">
+                                {{ form_row(form.prenom2) }}
+                            </div>
+                            <div class="col-md-4">
+                                {{ form_row(form.prenom3) }}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4">
+                                {{ form_row(form.lieuNaissance) }}
+                            </div>
+                            <div class="col-md-4">
+                                {{ form_row(form.dateNaissance) }}
+                            </div>
+                            <div class="col-md-4">
+                                {{ form_row(form.dateDeces) }}
+                            </div>
+                        </div>
+                        {{ form_row(form.notes) }}
+                    </div>
+                </div>
+
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <i class="fas fa-sitemap"></i> Parenté
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                {{ form_row(form.pere) }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form_row(form.mere) }}
+                            </div>
+                        </div>
+                        {{ form_row(form.ancetreLointain) }}
+                    </div>
+                </div>
+
+                {% if mode == 'modifier' and mariages is defined and mariages|length > 0 %}
+                    <div class="card mb-3">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <span><i class="fas fa-heart"></i> Mariages</span>
+                            <a href="{{ path('app_admin_mariage_ajouter', {individu1: individu.id}) }}"
+                               class="btn btn-success btn-sm">
+                                <i class="fas fa-plus"></i> Ajouter
+                            </a>
+                        </div>
+                        <div class="card-body">
+                            {% for mariage in mariages %}
+                                <div class="border rounded p-3 mb-2">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <strong>{{ mariage.individu1.nomComplet }}</strong>
+                                            <i class="fas fa-heart text-danger mx-2"></i>
+                                            <strong>{{ mariage.individu2.nomComplet }}</strong>
+                                        </div>
+                                        <div>
+                                            <a href="{{ path('app_admin_mariage_modifier', {id: mariage.id}) }}"
+                                               class="btn btn-outline-primary btn-sm">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <button type="button" class="btn btn-outline-danger btn-sm"
+                                                    onclick="if(confirm('Supprimer ce mariage ?'))location.href='{{ path('app_admin_mariage_supprimer', {id: mariage.id}) }}'">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="text-muted small mt-1">
+                                        {% if mariage.dateMariage %}
+                                            <i class="fas fa-calendar"></i> {{ mariage.dateMariage|date('d/m/Y') }}
+                                        {% endif %}
+                                        {% if mariage.lieuMariage %}
+                                            - {{ mariage.lieuMariage }}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% elseif mode == 'modifier' %}
+                    <div class="card mb-3">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <span><i class="fas fa-heart"></i> Mariages</span>
+                            <a href="{{ path('app_admin_mariage_ajouter', {individu1: individu.id}) }}"
+                               class="btn btn-success btn-sm">
+                                <i class="fas fa-plus"></i> Ajouter
+                            </a>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-muted mb-0">Aucun mariage enregistré.</p>
+                        </div>
+                    </div>
+                {% endif %}
+
+                {% if mode == 'modifier' %}
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <i class="fas fa-child"></i> Enfants
+                        </div>
+                        <div class="card-body">
+                            {% if enfants|length > 0 %}
+                                {% for enfant in enfants %}
+                                    <div class="border rounded p-3 mb-2">
+                                        <div class="d-flex justify-content-between">
+                                            <div>
+                                                <a href="{{ path('app_admin_individu_modifier', {id: enfant.id}) }}">
+                                                    <strong>{{ enfant.nomComplet }}</strong>
+                                                </a>
+                                                <span class="text-muted ms-2">
+                                                    ({{ enfant.sexe == 'M' ? 'Fils' : 'Fille' }}
+                                                    {% if enfant.dateNaissance %}né{{ enfant.sexe == 'F' ? 'e' : '' }} le {{ enfant.dateNaissance|date('d/m/Y') }}{% endif %})
+                                                </span>
+                                            </div>
+                                            <div>
+                                                <a href="{{ path('app_admin_individu_modifier', {id: enfant.id}) }}" class="btn btn-outline-primary btn-sm">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                <button type="button" class="btn btn-outline-danger btn-sm"
+                                                        onclick="if(confirm('Retirer {{ enfant.nomComplet }} comme enfant ?'))location.href='{{ path('app_admin_individu_detacher', {id: individu.id, childId: enfant.id}) }}'">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            {% endif %}
+
+                            <div class="mt-2">
+                                <label class="form-label small">Lier un individu existant comme enfant :</label>
+                                <div class="input-group">
+                                    <select id="newChildSelect" class="form-select select2-search"></select>
+                                    <button type="button" class="btn btn-success" id="btnLinkChild">
+                                        <i class="fas fa-link"></i> Lier
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+
+            {% if mode == 'modifier' %}
+                <div class="col-md-4">
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <i class="fas fa-camera"></i> Photo de profil
+                        </div>
+                        <div class="card-body text-center">
+                            <div id="photo-preview" class="mb-2">
+                                {% if individu.photo %}
+                                    <img src="{{ individu.photo }}"
+                                         class="bigavatar"
+                                         alt="Photo de {{ individu.nomComplet }}">
+                                {% else %}
+                                    <i class="fas fa-user-circle fa-8x text-muted"></i>
+                                {% endif %}
+                            </div>
+                            {{ form_widget(form.photo) }}
+                            <a class="btn btn-info btn-block"
+                               onclick="BnineModalOpen({
+                                   id:'bnine-modal-photo',
+                                   title:'Photo de profil',
+                                   url:'{{ path('bninefiles_files_uploadmodal', {domain:'individu', id:individu.id}) }}?crop',
+                                   currentInput:'individu_photo'
+                               })">
+                                <i class="fas fa-camera"></i> Modifier la photo
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <i class="fas fa-images"></i> Galerie d'images
+                        </div>
+                        <div class="card-body">
+                            {{ render(path('bninefiles_files_gallery', {domain: 'gallery', id: individu.id, editable: 1, compact: 1})) }}
+                        </div>
+                    </div>
+
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <i class="fas fa-folder-open"></i> Fichiers
+                        </div>
+                        <div class="card-body">
+                            {{ render(path('bninefiles_files', {domain: 'file', id: individu.id, editable: 1, compact: 1})) }}
+                        </div>
+                    </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    {{ form_end(form) }}
+
+    {% if mode == 'modifier' and routedelete is defined %}
+        <a href="{{ path(routedelete, {id: individu.id}) }}"
+           class="btn btn-danger mt-3"
+           onclick="return confirm('Confirmez-vous la suppression ?')">
+            <i class="fas fa-trash"></i> Supprimer cet individu
+        </a>
+    {% endif %}
+
+{% endblock %}
+
+{% block localscript %}
+    <script>
+        $(document).ready(function() {
+            $('.select2-search').select2({
+                theme: 'bootstrap-5',
+                width: '100%',
+                language: 'fr'
+            });
+
+                    $('#newChildSelect').select2({
+                        theme: 'bootstrap-5',
+                        width: '100%',
+                        language: 'fr',
+                        multiple: true,
+                        placeholder: 'Rechercher un individu...',
+                        allowClear: true,
+                        ajax: {
+                    url: '{{ path("app_arbre_search") }}',
+                    dataType: 'json',
+                    delay: 250,
+                    data: function(params) { return { q: params.term }; },
+                    processResults: function(data) {
+                        return {
+                            results: data.map(function(d) {
+                                return { id: d.id, text: d.nomComplet, gender: d.sexe };
+                            })
+                        };
+                    }
+                },
+                templateResult: function(d) {
+                    if (!d.id) return d.text;
+                    var icon = d.gender === 'F' ? 'fa-venus' : 'fa-mars';
+                    return $('<span><i class="fas ' + icon + ' me-2" style="color:' + (d.gender === 'F' ? '#d94a7b' : '#4a90d9') + '"></i>' + d.text + '</span>');
+                },
+                templateSelection: function(d) { return d.text; },
+                minimumInputLength: 1
+            });
+
+            var currentSexe = '{{ individu.sexe }}';
+
+            $('#btnLinkChild').on('click', function() {
+                var childIds = $('#newChildSelect').val();
+                if (!childIds || !childIds.length) { alert('Sélectionnez au moins un individu.'); return; }
+                if (!confirm('Lier ' + childIds.length + ' individu(s) comme enfant(s) ?')) return;
+
+                var typeLien = currentSexe === 'M' ? 'pere' : 'mere';
+
+                var promises = childIds.map(function(cid) {
+                    return fetch('/admin/individu/{{ individu.id }}/lier', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ typeLien: typeLien, cibleId: parseInt(cid) })
+                    }).then(function(r) { return r.json(); });
+                });
+
+                Promise.all(promises).then(function(results) {
+                    var errors = results.filter(function(r) { return !r.success; });
+                    if (errors.length) alert(errors[0].error || 'Erreur');
+                    location.reload();
+                });
+            });
+
+            document.addEventListener('bnine-modal-closed', function() {
+                var val = $('#individu_photo').val();
+                if (val) {
+                    $('#photo-preview').html('<img src="' + val + '" class="bigavatar" alt="Photo">');
+                }
+            });
+        });
+    </script>
+{% endblock %}

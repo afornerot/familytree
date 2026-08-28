@@ -1,0 +1,4 @@
+# CSRF désactivé - rôles admin protègent les formulaires
+framework:
+    form:
+        csrf_protection: false

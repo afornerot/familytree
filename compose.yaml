@@ -1,0 +1,41 @@
+services:
+  mariadb:
+    image: mariadb
+    container_name: familytree-mariadb
+    restart: unless-stopped  
+    environment:
+      MYSQL_ROOT_PASSWORD: changeme
+      MYSQL_DATABASE: familytree
+      MYSQL_USER: user
+      MYSQL_PASSWORD: changeme
+    volumes:
+      - ./volume/mariadb:/var/lib/mysql
+
+  familytree:
+    build:
+      context: .
+      dockerfile: ./misc/docker/Dockerfile
+    container_name: familytree
+    restart: unless-stopped  
+    image: reg.cadoles.com/envole/familytree
+    depends_on: 
+      - mariadb
+    ports:
+      - "8031:80"
+    volumes:
+      - ./public/uploads:/app/public/uploads:delegated
+      - ./uploads:/app/uploads:delegated
+      - ./templates:/app/templates:delegated
+      - ./config:/app/config:delegated
+      - ./src:/app/src:delegated
+      - ./misc:/app/misc:delegated
+      - ./public/lib:/app/public/lib:delegated
+      - ./.env.local:/app/.env.local
+      - ./.env:/app/.env
+
+  adminer:
+    image: adminer
+    container_name: familytree-adminer
+    restart: always
+    ports:
+      - 6031:8080

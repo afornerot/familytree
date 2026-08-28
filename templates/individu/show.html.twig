@@ -1,0 +1,183 @@
+{% extends 'base.html.twig' %}
+
+{% block title %} = {{title}}{% endblock %}
+
+{% block body %}
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1>{{ title }}</h1>
+        <div>
+            {% if is_granted('ROLE_ADMIN') %}
+                <a href="{{ path('app_admin_individu_modifier', {id: individu.id}) }}" class="btn btn-primary">
+                    <i class="fas fa-edit"></i> Modifier
+                </a>
+            {% endif %}
+            <a href="{{ path('app_home') }}" class="btn btn-secondary">Retour</a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card mb-3">
+                <div class="card-body text-center">
+                    {% if individu.photo %}
+                        <img src="{{ individu.photo }}"
+                             class="rounded-circle mb-3"
+                             style="width:150px; height:150px; object-fit:cover;"
+                             alt="{{ individu.nomComplet }}">
+                    {% else %}
+                        <i class="fas fa-user-circle fa-8x text-muted mb-3"></i>
+                    {% endif %}
+                    <h3>{{ individu.nomComplet }}</h3>
+                    <p class="text-muted">
+                        {{ individu.sexe == 'M' ? 'Né' : 'Née' }}
+                        {% if individu.dateNaissance %}
+                            le {{ individu.dateNaissance|date('d/m/Y') }}
+                        {% endif %}
+                        {% if individu.lieuNaissance %}
+                            à {{ individu.lieuNaissance }}
+                        {% endif %}
+                    </p>
+                    {% if individu.isDecede %}
+                        <p class="text-muted">
+                            Décédé(e) le {{ individu.dateDeces|date('d/m/Y') }}
+                        </p>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if individu.notes %}
+                <div class="card mb-3">
+                    <div class="card-header">Notes</div>
+                    <div class="card-body">
+                        <p>{{ individu.notes|nl2br }}</p>
+                    </div>
+                </div>
+            {% endif %}
+
+            <div class="card mb-3">
+                <div class="card-header"><i class="fas fa-folder-open"></i> Fichiers</div>
+                <div class="card-body">
+                    {{ render(path('bninefiles_files', {domain: 'file', id: individu.id, editable: 0, compact: 1})) }}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card mb-3">
+                <div class="card-header"><i class="fas fa-sitemap"></i> Parenté</div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong>Père :</strong>
+                            {% if individu.pere %}
+                                <a href="{{ path('app_individu_show', {id: individu.pere.id}) }}">
+                                    {{ individu.pere.nomComplet }}
+                                </a>
+                            {% else %}
+                                <span class="text-muted">Inconnu</span>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Mère :</strong>
+                            {% if individu.mere %}
+                                <a href="{{ path('app_individu_show', {id: individu.mere.id}) }}">
+                                    {{ individu.mere.nomComplet }}
+                                </a>
+                            {% else %}
+                                <span class="text-muted">Inconnue</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% if individu.ancetreLointain %}
+                        <hr>
+                        <div>
+                            <strong>Ancêtre lointain :</strong>
+                            <a href="{{ path('app_individu_show', {id: individu.ancetreLointain.id}) }}">
+                                {{ individu.ancetreLointain.nomComplet }}
+                            </a>
+                            <span class="text-muted">(rattachement sans lignée complète)</span>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% set mariages = individu.tousLesMariages %}
+            {% if mariages|length > 0 %}
+                <div class="card mb-3">
+                    <div class="card-header"><i class="fas fa-heart"></i> Mariages</div>
+                    <div class="card-body">
+                        {% for mariage in mariages %}
+                            <div class="border rounded p-3 mb-2">
+                                <strong>
+                                    <a href="{{ path('app_individu_show', {id: mariage.individu1.id}) }}">
+                                        {{ mariage.individu1.nomComplet }}
+                                    </a>
+                                </strong>
+                                <i class="fas fa-heart text-danger mx-2"></i>
+                                <strong>
+                                    <a href="{{ path('app_individu_show', {id: mariage.individu2.id}) }}">
+                                        {{ mariage.individu2.nomComplet }}
+                                    </a>
+                                </strong>
+                                <div class="text-muted small mt-1">
+                                    {% if mariage.dateMariage %}
+                                        <i class="fas fa-calendar"></i> {{ mariage.dateMariage|date('d/m/Y') }}
+                                    {% endif %}
+                                    {% if mariage.lieuMariage %}
+                                        - {{ mariage.lieuMariage }}
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+
+            {% set enfants = individu.tousLesEnfants %}
+            {% if enfants|length > 0 %}
+                <div class="card mb-3">
+                    <div class="card-header"><i class="fas fa-child"></i> Enfants</div>
+                    <div class="card-body">
+                        <ul class="list-unstyled mb-0">
+                            {% for enfant in enfants %}
+                                <li class="mb-1">
+                                    <a href="{{ path('app_individu_show', {id: enfant.id}) }}">
+                                        {{ enfant.nomComplet }}
+                                    </a>
+                                    <span class="text-muted small">
+                                        ({{ enfant.sexe == 'M' ? 'Fils' : 'Fille' }}
+                                        {% if enfant.dateNaissance %}né{{ enfant.sexe == 'F' ? 'e' : '' }} le {{ enfant.dateNaissance|date('d/m/Y') }}{% endif %})
+                                    </span>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            {% endif %}
+
+            <div class="card mb-3">
+                <div class="card-header"><i class="fas fa-images"></i> Galerie</div>
+                <div class="card-body">
+                    {{ render(path('bninefiles_files_gallery', {domain: 'gallery', id: individu.id, editable: 0, compact: 1})) }}
+                </div>
+            </div>
+
+            {% if individu.ascendantDe|length > 0 %}
+                <div class="card mb-3">
+                    <div class="card-header"><i class="fas fa-arrow-up"></i> Rattaché comme ancêtre de</div>
+                    <div class="card-body">
+                        <ul class="list-unstyled mb-0">
+                            {% for descendant in individu.ascendantDe %}
+                                <li class="mb-1">
+                                    <a href="{{ path('app_individu_show', {id: descendant.id}) }}">
+                                        {{ descendant.nomComplet }}
+                                    </a>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}

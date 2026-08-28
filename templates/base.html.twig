@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>{{appName}} {% block title %}{% endblock %}</title>
+        <link rel="icon" href="">
+                
+        <link rel="stylesheet" href="{{ asset('lib/bootstrap/css/bootstrap.min.css') }}">
+        <link rel="stylesheet" href="{{ asset('lib/bootswatch/bootswatch.min.css') }}">
+        <link rel="stylesheet" href="{{ asset('lib/fontawesome/css/all.min.css') }}">
+        <link rel="stylesheet" href="{{ asset('lib/datatables/datatables.min.css') }}">
+        <link rel="stylesheet" href="{{ asset('lib/select2/select2.min.css') }}">
+        <link rel="stylesheet" href="{{ asset('lib/select2/select2-bootstrap-5-theme.min.css') }}">
+        <link rel="stylesheet" href="{{ asset('lib/dropzone/dropzone.min.css') }}">
+        <link rel="stylesheet" href="{{ asset('lib/dropzone/dropzone-bootstrap.css') }}">
+        <link rel="stylesheet" href="{{ asset('lib/imgareaselect/css/imgareaselect-default.css') }}">
+        
+        <link rel="stylesheet" href="{{ asset('lib/app/app.css') }}">
+        <link rel="stylesheet" href="{{ asset('lib/app/selbg.css') }}">
+        <link rel="stylesheet" href="{{ asset('bundles/bninefiles/css/bninefiles.css') }}">
+        
+        <link rel="stylesheet" href="{{ asset('lib/family-chart/family-chart.css') }}">
+
+        <script src="{{ asset('lib/jquery/jquery.min.js')  }}"></script>
+        <script src="{{ asset('lib/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+        <!-- <script src="{{ asset('lib/fontawesome/fontawesome-free.index.js') }}"></script> -->
+        <script src="{{ asset('lib/datatables/datatables.min.js') }}"></script>
+        <script src="{{ asset('lib/datatables/datatables.init.js') }}"></script>
+        <script src="{{ asset('lib/select2/select2.min.js') }}"></script>
+        <script src="{{ asset('lib/select2/select2.init.js') }}"></script>
+        <script src="{{ asset('lib/dropzone/dropzone.min.js') }}"></script>
+        <script src="{{ asset('lib/imgareaselect/js/jquery.imgareaselect.dev.js') }}"></script>
+        <script src="{{ asset('lib/jqueryui/jquery-ui.min.js') }}"></script>
+        <script src="{{ asset('lib/chart/chart.js') }}"></script>
+        <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+        <script src="{{ asset('bundles/bninemdeditor/bninemdeditor.js') }}"></script>
+        <script src="{{ asset('bundles/bninefiles/js/bninefiles.js') }}"></script>
+        <script src="{{ asset('lib/d3/d3.min.js') }}"></script>
+        <script src="{{ asset('lib/family-chart/family-chart.min.js') }}"></script>
+        <script src="{{ asset('lib/app/app.js') }}"></script>
+
+        {% block javascripts %}
+            
+        {% endblock %}
+    </head>
+
+    {% block localstyle %}
+    {% endblock %}
+
+    <body>
+        {% if usemenu is defined and usemenu %}
+            <nav class="navbar navbar-expand-lg bg-dark" data-bs-theme="dark">
+                <div class="container-fluid">                
+                    <a class="navbar-brand" href="{{ path('app_home') }}">
+                        <img src="{{asset("medias/logo/logo.png")}}"> {{appName}}
+                    </a>
+                    
+                    <div class="collapse navbar-collapse" id="navbarColor02">
+                        <ul class="navbar-nav me-auto d-lg-none">
+                            {% if usesidebar is defined and usesidebar %}
+                                {% if pages is defined and pages|length > 0 %}
+                                    {% for page in pages %}
+                                        {% if page.published %}
+                                            {% set isActive = currentSlug is defined and currentSlug == page.slug %}
+                                            {% set hasActiveChild = false %}
+                                            {% if page.children is defined %}
+                                                {% for child in page.children %}
+                                                    {% if currentSlug is defined and currentSlug == child.slug %}
+                                                        {% set hasActiveChild = true %}
+                                                    {% endif %}
+                                                    {% if child.children is defined %}
+                                                        {% for grandchild in child.children %}
+                                                            {% if currentSlug is defined and currentSlug == grandchild.slug %}
+                                                                {% set hasActiveChild = true %}
+                                                            {% endif %}
+                                                        {% endfor %}
+                                                    {% endif %}
+                                                {% endfor %}
+                                            {% endif %}
+                                            <li class="nav-item">
+                                                <a class="nav-link {% if isActive or hasActiveChild %}active{% endif %}" href="{{ path('app_page_show', {slug: page.slug}) }}">
+                                                    {% if page.icon %}
+                                                        <i class="fas {{ page.icon }} fa-fw me-1"></i>
+                                                    {% endif %}
+                                                    {{ page.title }}
+                                                </a>
+                                                {% if page.children is defined and page.children|length > 0 and (isActive or hasActiveChild) %}
+                                                    <ul class="navbar-nav ms-3">
+                                                        {% for child in page.children %}
+                                                            {% if child.published %}
+                                                                {% set childActive = currentSlug is defined and currentSlug == child.slug %}
+                                                                {% set childHasActiveGrandchild = false %}
+                                                                {% if child.children is defined %}
+                                                                    {% for grandchild in child.children %}
+                                                                        {% if currentSlug is defined and currentSlug == grandchild.slug %}
+                                                                            {% set childHasActiveGrandchild = true %}
+                                                                        {% endif %}
+                                                                    {% endfor %}
+                                                                {% endif %}
+                                                                <li class="nav-item">
+                                                                    <a class="nav-link {% if childActive or childHasActiveGrandchild %}active{% endif %}" href="{{ path('app_page_show', {slug: child.slug}) }}">
+                                                                        {% if child.icon %}
+                                                                            <i class="fas {{ child.icon }} fa-fw me-1"></i>
+                                                                        {% endif %}
+                                                                        {{ child.title }}
+                                                                    </a>
+                                                                    {% if child.children is defined and child.children|length > 0 and (childActive or childHasActiveGrandchild) %}
+                                                                        <ul class="navbar-nav ms-3">
+                                                                            {% for grandchild in child.children %}
+                                                                                {% if grandchild.published %}
+                                                                                    <li class="nav-item">
+                                                                                        <a class="nav-link {% if currentSlug is defined and currentSlug == grandchild.slug %}active{% endif %}" href="{{ path('app_page_show', {slug: grandchild.slug}) }}">
+                                                                                            {% if grandchild.icon %}
+                                                                                                <i class="fas {{ grandchild.icon }} fa-fw me-1"></i>
+                                                                                            {% endif %}
+                                                                                            {{ grandchild.title }}
+                                                                                        </a>
+                                                                                    </li>
+                                                                                {% endif %}
+                                                                            {% endfor %}
+                                                                        </ul>
+                                                                    {% endif %}
+                                                                </li>
+                                                            {% endif %}
+                                                        {% endfor %}
+                                                    </ul>
+                                                {% endif %}
+                                            </li>
+                                        {% endif %}
+                                    {% endfor %}
+                                {% else %}
+                                    {% if is_granted('ROLE_ADMIN') %}
+                                        <li class="nav-item">
+                                            <a class="nav-link" href="{{ path('app_arbre') }}"><i class="fas fa-sitemap fa-fw me-1"></i> Arbre</a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link" href="{{ path('app_individu_list') }}"><i class="fas fa-users fa-fw me-1"></i> Individus</a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link" href="{{ path('app_admin_user') }}"><i class="fas fa-user fa-fw me-1"></i> Users</a>
+                                        </li>
+                                    {% endif %}
+                                {% endif %}
+                            {% endif %}
+                        </ul>
+                    </div>
+                
+                    <div class="navbar-nav ms-auto ps-3 d-flex flex-row align-items-center position-absolute" style="right: 15px; top:15px">
+                        {% if app.user %}
+                            {% if is_granted('ROLE_ADMIN') %}
+                                <a class="nav-link px-2" href="{{path('app_admin')}}"><i class="fa-solid fa-cog fa-2x"></i></a>
+                            {% endif %}
+                            <a class="nav-link px-2" href="{{path('app_user_profil')}}"><img src="{{asset(app.user.avatar)}}" class="avatar"></a>
+                            <a class="nav-link px-2" href="{{path('app_logout')}}"><i class="fa-solid fa-right-from-bracket fa-2x"></i></a>
+                        {% else %}
+                            <a class="nav-link px-2" href="{{path('app_login')}}"><i class="fa-solid fa-right-to-bracket fa-2x"></i></a>
+                        {% endif %}
+                    
+                        <a class="navbar-toggler nav-link px-2" href="#" data-bs-toggle="collapse" data-bs-target="#navbarColor02" aria-controls="navbarColor02" aria-expanded="false" aria-label="Toggle navigation"><i class="fa-solid fa-bars fa-2x"></i></a>
+                    </div>
+                </div>
+            </nav>
+        {% endif %}
+
+        <simplemain>
+        {% block simplebody %}
+        {% endblock %}
+        </simplemain>
+        
+        <main>
+            {% if usesidebar is defined and usesidebar %}
+                <sidebar>
+                    {% if pages is defined and pages|length > 0 %}
+                        <div class="sidebar-nav-scroll">
+                            <span>NAVIGATION</span>
+                            {% for page in pages %}
+                                {% if page.published %}
+                                    {% set isActive = currentSlug is defined and currentSlug == page.slug %}
+                                    {% set hasActiveChild = false %}
+                                    {% set hasActiveGrandchild = false %}
+                                    {% if page.children is defined %}
+                                        {% for child in page.children %}
+                                            {% if currentSlug is defined and currentSlug == child.slug %}
+                                                {% set hasActiveChild = true %}
+                                            {% endif %}
+                                            {% if child.children is defined %}
+                                                {% for grandchild in child.children %}
+                                                    {% if currentSlug is defined and currentSlug == grandchild.slug %}
+                                                        {% set hasActiveGrandchild = true %}
+                                                        {% set hasActiveChild = true %}
+                                                    {% endif %}
+                                                {% endfor %}
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% endif %}
+                                    <a href="{{ path('app_page_show', {slug: page.slug}) }}"
+                                       class="sidebar-nav-link {% if isActive or hasActiveChild %}active{% endif %}"
+                                       title="{{ page.title }}">
+                                        {% if page.icon %}
+                                            <i class="fas {{ page.icon }} fa-fw"></i>
+                                        {% else %}
+                                            <i class="fas fa-file fa-fw"></i>
+                                        {% endif %}
+                                        <span>{{ page.title }}</span>
+                                    </a>
+                                    {% if page.children is defined and page.children|length > 0 and (isActive or hasActiveChild) %}
+                                        <ul class="sidebar-nav-children">
+                                            {% for child in page.children %}
+                                                {% if child.published %}
+                                                    {% set childActive = currentSlug is defined and currentSlug == child.slug %}
+                                                    {% set childHasActiveGrandchild = false %}
+                                                    {% if child.children is defined %}
+                                                        {% for grandchild in child.children %}
+                                                            {% if currentSlug is defined and currentSlug == grandchild.slug %}
+                                                                {% set childHasActiveGrandchild = true %}
+                                                            {% endif %}
+                                                        {% endfor %}
+                                                    {% endif %}
+                                                    <li>
+                                                        <a href="{{ path('app_page_show', {slug: child.slug}) }}"
+                                                           class="sidebar-nav-child {% if childActive or childHasActiveGrandchild %}active{% endif %}"
+                                                           title="{{ child.title }}">
+                                                            {% if child.icon %}
+                                                                <i class="fas {{ child.icon }} fa-fw"></i>
+                                                            {% else %}
+                                                                <i class="fas fa-file fa-fw"></i>
+                                                            {% endif %}
+                                                            <span>{{ child.title }}</span>
+                                                        </a>
+                                                        {% if child.children is defined and child.children|length > 0 and (childActive or childHasActiveGrandchild) %}
+                                                            <ul class="sidebar-nav-children">
+                                                                {% for grandchild in child.children %}
+                                                                    {% if grandchild.published %}
+                                                                        <li>
+                                                                            <a href="{{ path('app_page_show', {slug: grandchild.slug}) }}"
+                                                                               class="sidebar-nav-child {% if currentSlug is defined and currentSlug == grandchild.slug %}active{% endif %}"
+                                                                               title="{{ grandchild.title }}">
+                                                                                {% if grandchild.icon %}
+                                                                                    <i class="fas {{ grandchild.icon }} fa-fw"></i>
+                                                                                {% else %}
+                                                                                    <i class="fas fa-file fa-fw"></i>
+                                                                                {% endif %}
+                                                                                <span>{{ grandchild.title }}</span>
+                                                                            </a>
+                                                                        </li>
+                                                                    {% endif %}
+                                                                {% endfor %}
+                                                            </ul>
+                                                        {% endif %}
+                                                    </li>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </ul>
+                                    {% endif %}
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        {% if is_granted('ROLE_ADMIN') %}
+                            <div>
+                                <span>ADMINISTRATION</span>
+                                <a href="{{ path('app_arbre') }}" title="Arbre Généalogique">
+                                    <i class="fas fa-sitemap fa-fw"></i>
+                                    <span>Arbre</span>
+                                </a>
+                                <a href="{{ path('app_individu_list') }}" title="Individus">
+                                    <i class="fas fa-users fa-fw"></i>
+                                    <span>Individus</span>
+                                </a>
+                                <a href="{{ path('app_admin_user') }}" title="Utilisateurs">
+                                    <i class="fas fa-user fa-fw"></i>
+                                    <span>Utilisateurs</span>
+                                </a>
+                            </div>
+                        {% endif %}
+                    {% endif %}
+                </sidebar>
+            {% endif %}
+
+            <content style="margin: 0px auto; overflow-x: hidden; {{ (maxwidth is defined ? "max-width:"~maxwidth~"px;":"") }}">
+                {% block body %}
+                {% endblock %}
+            </content>
+        </main>
+
+        <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999;">
+            <div id="ajaxErrorToast" class="toast align-items-center text-bg-danger border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="d-flex">
+                    <div class="toast-body" id="ajaxErrorMessage">
+                        Une erreur est survenue.
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Fermer"></button>
+                </div>
+            </div>
+        </div>
+
+        <div id="mymodal" class="modal" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4 class="modal-title">INFORMATION</h4>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <iframe id="framemodal" frameborder=0 width="100%" height="600px"></iframe>
+                    </div>
+                </div>
+            </div>
+        </div>        
+    </body>
+
+    {% block localscript %}
+    {% endblock %}
+</html>

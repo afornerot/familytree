@@ -1,0 +1,243 @@
+{% extends 'base.html.twig' %}
+
+{% block title %} = {{title}}{% endblock %}
+
+{% block body %}
+    <div class="tree-container">
+        <div class="tree-canvas-wrapper" id="treeCanvasWrapper">
+            <div class="tree-toolbar" id="treeToolbar">
+                {% if is_granted('ROLE_ADMIN') %}
+                    <button class="btn btn-primary btn-sm" id="btnAddRoot" title="Ajouter un individu">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                {% endif %}
+                <a href="{{ path('app_individu_list') }}" class="btn btn-outline-secondary btn-sm" title="Liste">
+                    <i class="fas fa-list"></i>
+                </a>
+                <input type="text" id="searchPerson" class="form-control form-control-sm" list="individusList" placeholder="Rechercher un individu..." style="width:300px">
+                <datalist id="individusList">
+                    {% for ind in individus %}
+                        <option value="{{ ind.text }}" data-id="{{ ind.id }}">{{ ind.text }}</option>
+                    {% endfor %}
+                </datalist>
+                <button type="button" class="btn btn-primary btn-sm" id="btnGoPerson" title="Aller à cet individu">
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+            <div id="FamilyChart" class="f3"></div>
+        </div>
+    </div>
+
+    <div class="link-modal" id="linkModal">
+        <div class="link-modal-content">
+            <h5 id="linkModalTitle"></h5>
+            <p id="linkModalDesc" class="mb-3" style="color:rgba(222,226,230,0.7)"></p>
+            <div id="linkModalVisual" class="text-center mb-3 p-3 rounded" style="background:var(--bs-tertiary-bg,#292929);">
+                <span id="linkVisualFrom" class="fw-bold fs-5"></span>
+                <span id="linkVisualArrow" class="mx-3 fs-4"></span>
+                <span id="linkVisualTo" class="fw-bold fs-5"></span>
+            </div>
+            <div id="linkModalOptions" class="d-flex flex-column gap-2">
+                <button class="link-type-btn text-start p-3 rounded" data-value="pere" id="linkTypeParent"><i class="fas fa-mars fa-lg me-2" style="color:rgba(255,255,255,0.7)"></i><strong id="linkLabelPere"></strong><div class="small mt-1" id="linkDescPere" style="color:rgba(222,226,230,0.5)"></div></button>
+                <button class="link-type-btn text-start p-3 rounded" data-value="mere" id="linkTypeMother"><i class="fas fa-venus text-danger fa-lg me-2"></i><strong id="linkLabelMere"></strong><div class="small mt-1" id="linkDescMere" style="color:rgba(222,226,230,0.5)"></div></button>
+                <button class="link-type-btn text-start p-3 rounded" data-value="fils" id="linkTypeChild"><i class="fas fa-child text-info fa-lg me-2"></i><strong id="linkLabelEnfant"></strong><div class="small mt-1" id="linkDescEnfant" style="color:rgba(222,226,230,0.5)"></div></button>
+                <button class="link-type-btn text-start p-3 rounded" data-value="conjoint" id="linkTypeSpouse"><i class="fas fa-heart text-danger fa-lg me-2"></i><strong id="linkLabelConjoint"></strong><div class="small mt-1" id="linkDescConjoint" style="color:rgba(222,226,230,0.5)"></div></button>
+                <button class="link-type-btn text-start p-3 rounded" data-value="ancetre" id="linkTypeAncestor"><i class="fas fa-arrow-up text-warning fa-lg me-2"></i><strong id="linkLabelAncetre"></strong><div class="small mt-1" id="linkDescAncetre" style="color:rgba(222,226,230,0.5)"></div></button>
+            </div>
+            <div class="d-flex gap-2 mt-3">
+                <button class="btn btn-success" id="linkModalConfirm"><i class="fas fa-check"></i> Valider</button>
+                <button class="btn btn-secondary" id="linkModalCancel">Annuler</button>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block localscript %}
+    <script>
+    (function() {
+        'use strict';
+        const isAdmin = {{ is_granted('ROLE_ADMIN') ? 'true' : 'false' }};
+
+        let f3Chart = null;
+        let selectedLinkType = null, linkModalContext = {};
+
+        function init() {
+            loadData();
+            document.getElementById('linkModalCancel').onclick = hideLink;
+            document.getElementById('linkModalConfirm').onclick = confirmLink;
+            document.querySelectorAll('.link-type-btn').forEach(b => b.onclick = () => {
+                document.querySelectorAll('.link-type-btn').forEach(x => x.classList.remove('active'));
+                b.classList.add('active');
+                selectedLinkType = b.dataset.value;
+            });
+            if (isAdmin) document.getElementById('btnAddRoot').onclick = () => { window.location.href = '{{ path("app_admin_individu_ajouter") }}'; };
+
+            $('#searchPerson').on('change', function() {
+                var val = $(this).val();
+                var opt = document.querySelector('#individusList option[value="' + val + '"]');
+                if (opt) {
+                    var id = opt.dataset.id;
+                    localStorage.setItem('familytree_main_id', id);
+                    f3Chart.updateMainId(id);
+                    f3Chart.updateTree({});
+                    $(this).val('');
+                }
+            });
+
+            $('#btnGoPerson').on('click', function() {
+                $('#searchPerson').trigger('change');
+            });
+        }
+
+        async function loadData() {
+            const dataUrl = '{{ path("app_arbre_data") }}?t=' + Date.now();
+            const data = await (await fetch(dataUrl)).json();
+            renderTree(data);
+        }
+
+        function renderTree(data) {
+            const container = document.getElementById('FamilyChart');
+            container.innerHTML = '';
+
+            f3Chart = f3.createChart('#FamilyChart', data);
+
+            f3Chart.setCardHtml()
+                .setCardDisplay([
+                    function(d) { return (d.data['last name'] || '').toUpperCase(); },
+                    function(d) { return (d.data['first name'] || '').split(' ')[0] || ''; },
+                    function(d) {
+                        var b = d.data['birthday'] || '';
+                        var de = d.data['death'] || '';
+                        var by = b.split('/').pop() || '';
+                        var dy = de.split('/').pop() || '';
+                        return by || dy ? by + (by && dy ? ' - ' : '') + dy : '';
+                    }
+                ]);
+
+            f3Chart.setCardXSpacing(250);
+            f3Chart.setCardYSpacing(120);
+            f3Chart.setAncestryDepth(10);
+            f3Chart.setProgenyDepth(10);
+            f3Chart.setSingleParentEmptyCard(false);
+
+            const savedId = localStorage.getItem('familytree_main_id') || '37';
+            f3Chart.updateMainId(savedId);
+            f3Chart.updateTree({ initial: true });
+
+            f3Chart.setAfterUpdate(function() {
+                try {
+                    const mainId = f3Chart.store.getMainId();
+                    if (mainId) localStorage.setItem('familytree_main_id', mainId);
+                } catch(e) {}
+            });
+
+            const attachContextMenu = () => {
+                document.querySelectorAll('.card_cont, .card_cont .card').forEach(el => {
+                    if (el._ctxAttached) return;
+                    el._ctxAttached = true;
+                    el.addEventListener('contextmenu', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        let datum = this.__data__;
+                        if (!datum) {
+                            const cont = this.closest('.card_cont');
+                            if (cont) datum = cont.__data__;
+                        }
+                        if (datum && datum.data) showCtx(datum.data, e);
+                    });
+                });
+            };
+            attachContextMenu();
+            f3Chart.setOnUpdate(function() { attachContextMenu(); });
+        }
+
+        let ctxEl = null;
+        function showCtx(datum, e) {
+            hideCtx();
+            const id = datum.id;
+            const m = document.createElement('div');
+            m.id = 'ctxMenu';
+            m.style.cssText = 'position:fixed;left:'+e.clientX+'px;top:'+e.clientY+'px;z-index:100;background:var(--bs-body-bg,#1e1e2e);border:1px solid var(--bs-border-color,#444);border-radius:8px;padding:4px 0;min-width:200px;box-shadow:0 4px 16px rgba(0,0,0,0.4)';
+            const items = [
+                { i: 'fa-eye', l: 'Voir', a: () => location.href = '{{ path("app_individu_show",{id:"__ID__"}) }}'.replace('__ID__', id) },
+            ];
+            if (isAdmin) {
+                items.push(
+                    { d: 1 },
+                    { i: 'fa-edit', l: 'Modifier', a: () => location.href = '{{ path("app_admin_individu_modifier",{id:"__ID__"}) }}'.replace('__ID__', id) },
+                    { d: 1 },
+                    { i: 'fa-trash', l: 'Supprimer', cls: 'color:var(--bs-danger,#e74c3c)', a: () => { if (confirm('Supprimer ?')) fetch('{{ path("app_admin_individu_supprimer",{id:"__ID__"}) }}'.replace('__ID__', id), { method: 'POST' }).then(() => loadData()); } },
+                );
+            }
+            items.forEach(it => {
+                if (it.d) { const d = document.createElement('div'); d.style.cssText = 'height:1px;background:var(--bs-border-color,#444);margin:4px 0'; m.appendChild(d); }
+                else { const b = document.createElement('button'); b.style.cssText = 'display:flex;align-items:center;padding:8px 16px;cursor:pointer;font-size:14px;color:var(--bs-body-color,#cdd6f4);border:none;background:none;width:100%;text-align:left;'+(it.cls||''); b.innerHTML = '<i class="fas '+it.i+'" style="width:20px;margin-right:10px"></i>'+it.l; b.onmousedown = () => { hideCtx(); it.a(); }; m.appendChild(b); }
+            });
+            document.body.appendChild(m);
+            ctxEl = m;
+            setTimeout(() => document.addEventListener('mousedown', hideCtx, { once: true }), 10);
+        }
+        function hideCtx() { if (ctxEl) { ctxEl.remove(); ctxEl = null; } }
+
+        function personName(id) {
+            if (!f3Chart) return '#' + id;
+            const d = f3Chart.store.getDatum(id);
+            if (!d) return '#' + id;
+            return ((d.data['last name'] || '') + ' ' + (d.data['first name'] || '').split(' ')[0]).trim() || '#' + id;
+        }
+
+        function showLinkModal(nodeId, mode) {
+            linkModalContext = { nodeId, mode };
+            selectedLinkType = null;
+            document.querySelectorAll('.link-type-btn').forEach(b => b.classList.remove('active'));
+            ['linkTypeParent', 'linkTypeMother', 'linkTypeChild', 'linkTypeSpouse', 'linkTypeAncestor'].forEach(id => document.getElementById(id).style.display = 'block');
+            document.getElementById('linkModalOptions').style.display = 'flex';
+            const f = document.getElementById('linkVisualFrom'), a = document.getElementById('linkVisualArrow'), t = document.getElementById('linkVisualTo');
+            const tn = personName(nodeId);
+            if (mode === 'add_child') {
+                document.getElementById('linkModalTitle').textContent = 'Nouvel enfant de ' + tn;
+                document.getElementById('linkModalDesc').textContent = 'Le lien sera créé après avoir choisi l\'individu.';
+                f.textContent = tn; a.innerHTML = '<i class="fas fa-arrow-down"></i>'; t.textContent = 'Enfant';
+                document.getElementById('linkLabelPere').textContent = tn + ' est le père';
+                document.getElementById('linkDescPere').textContent = 'L\'enfant sera lié comme fils.';
+                document.getElementById('linkLabelMere').textContent = tn + ' est la mère';
+                document.getElementById('linkDescMere').textContent = 'L\'enfant sera lié comme fille.';
+                ['linkTypeChild', 'linkTypeSpouse', 'linkTypeAncestor'].forEach(id => document.getElementById(id).style.display = 'none');
+            } else if (mode === 'add_spouse') {
+                document.getElementById('linkModalTitle').textContent = 'Nouveau conjoint de ' + tn;
+                document.getElementById('linkModalDesc').textContent = 'Le conjoint sera créé et lié par un mariage.';
+                f.textContent = tn; a.innerHTML = '<i class="fas fa-heart"></i>'; t.textContent = 'Conjoint';
+                document.getElementById('linkModalOptions').style.display = 'none';
+            } else if (mode === 'attach_ancestor') {
+                document.getElementById('linkModalTitle').textContent = 'Rattacher un ancêtre';
+                document.getElementById('linkModalDesc').textContent = 'Sélectionnez le type de lien :';
+                f.textContent = 'Ancêtre'; a.innerHTML = '<i class="fas fa-arrow-up"></i>'; t.textContent = tn;
+                document.getElementById('linkLabelAncetre').textContent = tn + ' descend de cet ancêtre';
+                document.getElementById('linkDescAncetre').textContent = 'Lien de descendance sans lignée complète.';
+                ['linkTypeParent', 'linkTypeMother', 'linkTypeChild', 'linkTypeSpouse'].forEach(id => document.getElementById(id).style.display = 'none');
+            }
+            document.getElementById('linkModal').classList.add('active');
+        }
+        function hideLink() { document.getElementById('linkModal').classList.remove('active'); selectedLinkType = null; document.querySelectorAll('.link-type-btn').forEach(b => b.classList.remove('active')); }
+
+        async function confirmLink() {
+            const { nodeId, mode } = linkModalContext;
+            if (mode === 'add_child' || mode === 'attach_ancestor') {
+                if (!selectedLinkType) { alert('Sélectionnez un type.'); return; }
+                const cid = prompt('ID de l\'individu cible :'); if (!cid) return;
+                const r = await fetch('/admin/individu/' + nodeId + '/lier', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ typeLien: selectedLinkType, cibleId: parseInt(cid) }) });
+                const res = await r.json();
+                if (res.success) { hideLink(); loadData(); } else alert(res.error || 'Erreur');
+            } else if (mode === 'add_spouse') {
+                const cid = prompt('ID du conjoint :'); if (!cid) return;
+                const r = await fetch('/admin/individu/' + nodeId + '/lier', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ typeLien: 'conjoint', cibleId: parseInt(cid) }) });
+                const res = await r.json();
+                if (res.success) { hideLink(); loadData(); } else alert(res.error || 'Erreur');
+            }
+        }
+
+        function esc(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+        document.addEventListener('DOMContentLoaded', init);
+    })();
+    </script>
+{% endblock %}

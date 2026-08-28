@@ -1,0 +1,13 @@
+mcp:
+    app: 'babylon'
+    version: '1.0.0'
+    description: 'Serveur MCP pour l''encyclopédie Babylon'
+    client_transports:
+        stdio: true
+        http: true
+    http:
+        path: /mcp
+        allowed_hosts: false
+        session:
+            store: cache
+            cache_pool: 'cache.mcp.sessions'

@@ -1,0 +1,48 @@
+{% extends 'base.html.twig' %}
+
+{% block title %} = {{title}}{% endblock %}
+
+{% block body %}
+    <h1>{{title}}</h1>
+
+    {{ form_start(form) }}
+
+        <div class="d-flex mb-3">
+            <button type="submit" class="btn btn-success">
+                <i class="fas fa-save"></i> Enregistrer
+            </button>
+            <a href="{{ path(routecancel) }}" class="btn btn-secondary ms-2">Annuler</a>
+        </div>
+
+        {% include('include/error.html.twig') %}
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-heart"></i> Informations du mariage
+                    </div>
+                    <div class="card-body">
+                        {{ form_row(form.individu1) }}
+                        {{ form_row(form.individu2) }}
+                        {{ form_row(form.dateMariage) }}
+                        {{ form_row(form.lieuMariage) }}
+                        {{ form_row(form.notes) }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    {{ form_end(form) }}
+{% endblock %}
+
+{% block localscript %}
+    <script>
+        $(document).ready(function() {
+            $('.select2-search').select2({
+                theme: 'bootstrap-5',
+                width: '100%',
+                language: 'fr'
+            });
+        });
+    </script>
+{% endblock %}
