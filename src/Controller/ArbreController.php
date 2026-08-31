@@ -65,7 +65,7 @@ class ArbreController extends AbstractController
             foreach ($spouses as $sid) {
                 if (!empty($childrenOf[$sid])) {
                     foreach ($childrenOf[$sid] as $childId) {
-                        if (!in_array($childId, $childrenOf[$id])) {
+                        if ($childId !== $id && !in_array($childId, $childrenOf[$id])) {
                             $childrenOf[$id][] = $childId;
                         }
                     }
@@ -163,7 +163,7 @@ class ArbreController extends AbstractController
             foreach ($spouses as $s) {
                 if (!empty($childrenOf[$s])) {
                     foreach ($childrenOf[$s] as $childId) {
-                        if (!isset($childrenOf[$sid]) || !in_array($childId, $childrenOf[$sid])) {
+                        if ($childId !== $sid && (!isset($childrenOf[$sid]) || !in_array($childId, $childrenOf[$sid]))) {
                             $childrenOf[$sid][] = $childId;
                         }
                     }
