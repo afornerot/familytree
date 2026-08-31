@@ -101,7 +101,7 @@
             chart.setCardHtml()
                 .setCardDisplay([
                     function(d) { return (d.data['last name'] || '').toUpperCase(); },
-                    function(d) { return (d.data['first name'] || '').split(' ')[0] || ''; },
+                    function(d) { return d.data['first name'] || ''; },
                     function(d) {
                         var b = d.data['birthday'] || '';
                         var de = d.data['death'] || '';
