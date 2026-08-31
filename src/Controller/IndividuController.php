@@ -57,6 +57,7 @@ class IndividuController extends AbstractController
             'routecancel' => 'app_individu_list',
             'mode' => 'ajouter',
             'form' => $form,
+            'individu' => $individu,
         ]);
     }
 

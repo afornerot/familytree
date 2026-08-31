@@ -119,8 +119,9 @@
             f3Chart.setProgenyDepth(10);
             f3Chart.setSingleParentEmptyCard(false);
 
-            const savedId = localStorage.getItem('familytree_main_id') || '37';
-            f3Chart.updateMainId(savedId);
+            const savedId = localStorage.getItem('familytree_main_id');
+            const validId = savedId && data.some(d => String(d.id) === String(savedId)) ? savedId : (data.length ? String(data[0].id) : '37');
+            f3Chart.updateMainId(validId);
             f3Chart.updateTree({ initial: true });
 
             f3Chart.setAfterUpdate(function() {
