@@ -10,13 +10,14 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use SortDirection;
 
 class ArbreController extends AbstractController
 {
     #[Route('/arbre', name: 'app_arbre')]
     public function index(IndividuRepository $individuRepository): Response
     {
-        $individus = $individuRepository->findBy([], ['nomNaissance' => 'ASC']);
+        $individus = $individuRepository->findBy([], ['nomNaissance' => SortDirection::Ascending]);
         $selectData = array_map(fn($i) => ['id' => $i->getId(), 'text' => $i->getNomComplet()], $individus);
 
         return $this->render('arbre/tree.html.twig', [
@@ -30,7 +31,7 @@ class ArbreController extends AbstractController
     #[Route('/arbre/data', name: 'app_arbre_data')]
     public function data(IndividuRepository $individuRepository, MariageRepository $mariageRepository): JsonResponse
     {
-        $individus = $individuRepository->findBy([], ['nomNaissance' => 'ASC']);
+        $individus = $individuRepository->findBy([], ['nomNaissance' => SortDirection::Ascending]);
         $mariages = $mariageRepository->findAll();
 
         $spousesOf = [];

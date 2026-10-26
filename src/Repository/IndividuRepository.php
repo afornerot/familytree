@@ -5,6 +5,7 @@ namespace App\Repository;
 use App\Entity\Individu;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use SortDirection;
 
 /**
  * @extends ServiceEntityRepository<Individu>
@@ -21,7 +22,7 @@ class IndividuRepository extends ServiceEntityRepository
         return $this->createQueryBuilder('i')
             ->where('i.pere IS NULL')
             ->andWhere('i.mere IS NULL')
-            ->orderBy('i.nomNaissance', 'ASC')
+            ->orderBy('i.nomNaissance', SortDirection::Ascending)
             ->getQuery()
             ->getResult();
     }
@@ -34,7 +35,7 @@ class IndividuRepository extends ServiceEntityRepository
             ->orWhere('i.prenom2 LIKE :query')
             ->orWhere('i.prenom3 LIKE :query')
             ->setParameter('query', '%' . $query . '%')
-            ->orderBy('i.nomNaissance', 'ASC')
+            ->orderBy('i.nomNaissance', SortDirection::Ascending)
             ->setMaxResults(20)
             ->getQuery()
             ->getResult();

@@ -15,13 +15,14 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use SortDirection;
 
 class IndividuController extends AbstractController
 {
     #[Route('/individu', name: 'app_individu_list')]
     public function list(IndividuRepository $individuRepository): Response
     {
-        $individus = $individuRepository->findBy([], ['nomNaissance' => 'ASC']);
+        $individus = $individuRepository->findBy([], ['nomNaissance' => SortDirection::Ascending]);
 
         return $this->render('individu/list.html.twig', [
             'usemenu' => true,
