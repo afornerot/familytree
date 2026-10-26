@@ -43,6 +43,7 @@ security:
     - { path: ^/login, roles: PUBLIC_ACCESS }
     - { path: ^/admin, roles: ROLE_ADMIN }
     - { path: ^/mcp, roles: PUBLIC_ACCESS }
+    - { path: ^/user, roles: ROLE_USER }
     - { path: ^/, roles: PUBLIC_ACCESS }
 
 when@test:
