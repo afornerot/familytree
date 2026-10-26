@@ -2,7 +2,6 @@
 
 namespace App\Controller;
 
-use Jumbojett\OpenIDConnectClient;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -32,28 +31,15 @@ class SecurityController extends AbstractController
     }
 
     #[Route('/auth/callback', name: 'app_auth_callback')]
+    /**
+     * Retour du fournisseur OIDC (OIDC_REDIRECTURI).
+     *
+     * Le routeur s'exécute avant le firewall : la route est indispensable pour
+     * éviter un 404 avant que DynamicAuthenticator ne traite le code. Cette
+     * action n'est atteinte qu'après une authentification réussie.
+     */
     public function callback(): Response
     {
-        $oidc = new OpenIDConnectClient(
-            $this->getParameter('oidcIssuer'),
-            $this->getParameter('oidcClientId'),
-            $this->getParameter('oidcClientSecret')
-        );
-
-        $oidc->setRedirectURL($this->generateUrl('app_auth_callback', [], 0)); // URL absolue
-        $oidc->addScope(['openid', 'profile', 'email']);
-
-        // Cette ligne déclenche l'échange du "code" contre le "token"
-        if ($oidc->authenticate()) {
-            $userInfo = $oidc->requestUserInfo();
-
-            // 1. Ici, vous devez gérer votre session Symfony
-            // Ex: $session->set('user_email', $userInfo->email);
-
-            // 2. Une fois authentifié, on redirige enfin vers la Home
-            return $this->redirectToRoute('app_home');
-        }
-
-        return new Response("Erreur d'authentification", 403);
+        return $this->redirectToRoute('app_home');
     }
 }
