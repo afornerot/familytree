@@ -1,4 +1,0 @@
-framework:
-    cache:
-        pools:
-            cache.mcp.sessions: ~
