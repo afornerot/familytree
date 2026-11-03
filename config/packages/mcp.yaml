@@ -1,13 +1,19 @@
 mcp:
-    app: 'babylon'
-    version: '1.0.0'
-    description: 'Serveur MCP pour l''encyclopédie Babylon'
-    client_transports:
-        stdio: true
-        http: true
-    http:
-        path: /mcp
-        allowed_hosts: false
-        session:
-            store: cache
-            cache_pool: 'cache.mcp.sessions'
+    servers:
+        # Copie-collee de babylon dans l ancien schema : le nom annonce aux
+        # clients etait deja "babylon". Valeurs conservees telles quelles.
+        babylon:
+            version: '1.0.0'
+            description: 'Serveur MCP pour l''encyclopédie Babylon'
+            # Depuis 0.13 la liste des elements exposes est obligatoire ;
+            # "*" conserve l ancien comportement implicite.
+            registry: '*'
+            transports:
+                stdio: true
+                http: true
+            http:
+                path: /mcp
+                allowed_hosts: false
+            session:
+                store: cache
+                cache_pool: 'cache.mcp.sessions'
