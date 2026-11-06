@@ -162,7 +162,7 @@ class IndividuController extends AbstractController
 
         $individu = $em->getRepository(Individu::class)->find($id);
         if (!$individu) {
-            return new JsonResponse(['success' => false, 'error' => 'Individu non trouvé.'], 404);
+            return new JsonResponse(['success' => false, 'error' => 'Individu non trouvé.'], \Symfony\Component\HttpFoundation\Response::HTTP_NOT_FOUND);
         }
 
         $data = json_decode($request->getContent(), true);
@@ -195,7 +195,7 @@ class IndividuController extends AbstractController
 
         $individu = $em->getRepository(Individu::class)->find($id);
         if (!$individu) {
-            return new JsonResponse(['success' => false, 'error' => 'Individu non trouvé.'], 404);
+            return new JsonResponse(['success' => false, 'error' => 'Individu non trouvé.'], \Symfony\Component\HttpFoundation\Response::HTTP_NOT_FOUND);
         }
 
         $data = json_decode($request->getContent(), true);
@@ -204,7 +204,7 @@ class IndividuController extends AbstractController
 
         $cible = $em->getRepository(Individu::class)->find($cibleId);
         if (!$cible) {
-            return new JsonResponse(['success' => false, 'error' => 'Individu cible non trouvé.'], 404);
+            return new JsonResponse(['success' => false, 'error' => 'Individu cible non trouvé.'], \Symfony\Component\HttpFoundation\Response::HTTP_NOT_FOUND);
         }
 
         switch ($typeLien) {
@@ -227,7 +227,7 @@ class IndividuController extends AbstractController
                 $em->persist($mariage);
                 break;
             default:
-                return new JsonResponse(['success' => false, 'error' => 'Type de lien inconnu.'], 400);
+                return new JsonResponse(['success' => false, 'error' => 'Type de lien inconnu.'], \Symfony\Component\HttpFoundation\Response::HTTP_BAD_REQUEST);
         }
 
         $em->flush();

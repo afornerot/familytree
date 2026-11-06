@@ -680,10 +680,10 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *         message_bus?: scalar|Param|null, // The message bus to use. // Default: "messenger.default_bus"
  *         routing?: array<string, array{ // Default: []
  *             service?: scalar|Param|null,
- *             secret?: scalar|Param|null, // Default: ""
+ *             secret?: scalar|Param|null, // The secret used to verify incoming request signatures. It must be set in production: with an empty value, depending on the parser, requests from any sender are accepted or every request is rejected. // Default: ""
  *         }>,
  *     },
- *     remote-event?: bool|array{ // RemoteEvent configuration
+ *     remote_event?: bool|array{ // RemoteEvent configuration
  *         enabled?: bool|Param, // Default: false
  *     },
  *     json_streamer?: bool|array{ // JSON streamer configuration
@@ -1112,7 +1112,7 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *             limiter?: scalar|Param|null, // A service id implementing "Symfony\Component\HttpFoundation\RateLimiter\RequestRateLimiterInterface".
  *             max_attempts?: int|Param, // Default: 5
  *             interval?: scalar|Param|null, // Default: "1 minute"
- *             lock_factory?: scalar|Param|null, // The service ID of the lock factory used by the login rate limiter (or null to disable locking). // Default: null
+ *             lock_factory?: scalar|Param|null, // The service ID of the lock factory used by the login rate limiter ("auto" to use the default one when the Lock component is configured, or null to disable locking). // Default: "auto"
  *             cache_pool?: string|Param, // The cache pool to use for storing the limiter state // Default: "cache.rate_limiter"
  *             storage_service?: string|Param, // The service ID of a custom storage implementation, this precedes any configured "cache_pool" // Default: null
  *         },
@@ -1234,7 +1234,7 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *             token_handler?: Param|string|array{
  *                 id?: scalar|Param|null,
  *                 oidc_user_info?: Param|string|array{
- *                     base_uri?: scalar|Param|null, // Base URI of the userinfo endpoint on the OIDC server, or the OIDC server URI to use the discovery (require "discovery" to be configured).
+ *                     base_uri?: scalar|Param|null, // Base URI of the userinfo endpoint on the OIDC server, or the OIDC server URI to use the discovery (require "discovery" to be configured). The latter must end with a slash when it has a path, as the discovery path is resolved against it as a relative URL.
  *                     discovery?: array{ // Enable the OIDC discovery.
  *                         cache?: array{
  *                             id?: scalar|Param|null, // Cache service id to use to cache the OIDC discovery configuration.
@@ -1303,9 +1303,9 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *             lifetime?: int|Param, // Default: 31536000
  *             path?: scalar|Param|null, // Default: "/"
  *             domain?: scalar|Param|null, // Default: null
- *             secure?: true|false|"auto"|Param, // Default: null
+ *             secure?: true|false|"auto"|Param, // Defaults to the value of "framework.session.cookie_secure", or to "auto".
  *             httponly?: bool|Param, // Default: true
- *             samesite?: null|"lax"|"strict"|"none"|Param, // Default: null
+ *             samesite?: null|"lax"|"strict"|"none"|Param, // Defaults to the value of "framework.session.cookie_samesite", or to "lax".
  *             always_remember_me?: bool|Param, // Default: false
  *             remember_me_parameter?: scalar|Param|null, // Default: "_remember_me"
  *         },
@@ -1845,35 +1845,100 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *     }>,
  * }
  * @psalm-type McpConfig = array{
- *     app?: scalar|Param|null, // Default: "app"
- *     version?: scalar|Param|null, // Default: "0.0.1"
- *     description?: scalar|Param|null, // Default: null
- *     icons?: list<array{ // Default: []
- *         src?: scalar|Param|null,
- *         mime_type?: scalar|Param|null, // Default: null
- *         sizes?: list<scalar|Param|null>,
- *     }>,
- *     website_url?: scalar|Param|null, // Default: null
- *     pagination_limit?: int|Param, // Default: 50
- *     instructions?: scalar|Param|null, // Default: null
- *     client_transports?: array{
- *         stdio?: bool|Param, // Default: false
- *         http?: bool|Param, // Default: false
- *     },
- *     apps?: array{ // MCP Apps support (interactive HTML UI resources). Apps are registered with the #[AsMcpApp] attribute.
- *         enabled?: bool|Param|null, // Default: null
- *     },
- *     http?: array{
- *         path?: scalar|Param|null, // Default: "/_mcp"
- *         allowed_hosts?: mixed, // DNS rebinding protection hosts (without port). Leave unset to keep the SDK default (localhost only), set an array of hostnames to expose a public MCP server, or false to disable the protection entirely. // Default: null
- *         session?: array{
- *             store?: "file"|"memory"|"cache"|"framework"|Param, // Default: "file"
- *             directory?: scalar|Param|null, // Default: "%kernel.cache_dir%/mcp-sessions"
- *             cache_pool?: scalar|Param|null, // Default: "cache.mcp.sessions"
- *             prefix?: scalar|Param|null, // Default: "mcp-"
- *             ttl?: int|Param, // Default: 3600
+ *     servers?: list<array{ // Default: []
+ *         name?: string|Param, // Name advertised to clients. Defaults to the configuration key. // Default: null
+ *         version?: string|Param, // Default: "0.0.1"
+ *         description?: string|Param, // Default: null
+ *         icons?: list<array{ // Default: []
+ *             src?: string|Param,
+ *             mime_type?: string|Param, // Default: null
+ *             sizes?: list<scalar|Param|null>,
+ *         }>,
+ *         website_url?: string|Param, // Default: null
+ *         pagination_limit?: int|Param, // Default: 50
+ *         instructions?: string|Param, // Default: null
+ *         transports?: array{
+ *             stdio?: bool|Param, // Expose the server over STDIO via the "mcp:server" command. // Default: false
+ *             http?: bool|Param, // Expose the server over HTTP via a controller and route. // Default: true
  *         },
- *     },
+ *         http?: array{
+ *             path?: string|Param, // HTTP endpoint path. Defaults to "/mcp/<name>". // Default: null
+ *             allowed_hosts?: mixed, // DNS rebinding protection hosts (without port). Leave unset to keep the SDK default (localhost only), set an array of hostnames to expose a public MCP server, or false to disable the protection entirely. // Default: null
+ *             allowed_origins?: list<scalar|Param|null>,
+ *         },
+ *         protocol_versions?: Param|string|list<"2024-11-05"|"2025-03-26"|"2025-06-18"|"2025-11-25"|"2026-07-28"|Param>,
+ *         request_state?: array{ // Signs the state a multi-round-trip answer carries through the client, which has no session to keep progress in. Required for a modern-era server whose handlers return an InputRequiredResult, and for one whose handlers call ClientGateway::elicit() more than once: the second ask has to carry the first answer to the next round.
+ *             key?: string|Param, // HMAC key, at least 32 bytes. The same value must reach every process that might serve the retry. // Default: null
+ *             ttl?: int|Param, // Seconds a minted state stays valid. // Default: 600
+ *         },
+ *         cache?: array{ // Cache hints the modern-era leg puts on its answers. The spec requires them on server/discover, the list methods and resources/read.
+ *             ttl_ms?: int|Param, // Default freshness in milliseconds. 0 refuses caching. // Default: 0
+ *             scope?: "private"|"public"|Param, // Default: "private"
+ *             methods?: array<string, array{ // Default: []
+ *                 ttl_ms?: int|Param,
+ *                 scope?: "private"|"public"|Param, // Default: "private"
+ *             }>,
+ *         },
+ *         subscriptions?: array{ // Delivery for "subscriptions/listen" streams, which replace the HTTP GET stream in 2026-07-28.
+ *             bus?: "none"|"memory"|"cache"|Param, // Default: "none"
+ *             cache_pool?: string|Param, // PSR-16 service for the "cache" bus. Under PHP-FPM the publisher and the stream are different workers, so "memory" cannot reach them. // Default: "cache.mcp.notifications"
+ *             lifetime?: float|Param, // Seconds a stream is held before the server closes it gracefully. 0 means until the client or the runtime ends it. // Default: 30.0
+ *         },
+ *         session?: array{ // Session storage. Every server needs its own store: session ids are not namespaced by server, so a shared store makes a session minted on one server valid on the others.
+ *             store?: "file"|"memory"|"cache"|"framework"|Param, // Default: "file"
+ *             directory?: string|Param, // Directory for the "file" store. Defaults to "%kernel.cache_dir%/mcp-sessions/<name>". // Default: null
+ *             cache_pool?: string|Param, // PSR-16 cache service for the "cache" store. // Default: "cache.mcp.sessions"
+ *             prefix?: string|Param, // Key prefix for the "cache" and "framework" stores and a "session.lock.factory" lock. Defaults to "mcp-<name>-". // Default: null
+ *             ttl?: int|Param, // Default: 3600
+ *             lock?: bool|array{ // Serializes the concurrent requests of one session, so none of them overwrites what another saved.
+ *                 enabled?: bool|Param, // Default: false
+ *                 factory?: string|Param, // Service id of a Symfony\Component\Lock\LockFactory, for a store shared across machines. Unset, the "file" store locks with flock() next to its session files. // Default: null
+ *                 timeout?: float|Param, // Seconds to wait for a lock held by another request of the same session. // Default: 30.0
+ *                 ttl?: float|Param, // Seconds a "factory" lock lives before its store expires it; must exceed the longest handler run. Ignored by the file lock. // Default: 300.0
+ *             },
+ *         },
+ *         registry?: array{ // The elements this server exposes, either as one list covering every kind or as a map narrowing each kind.
+ *             tools?: Param|string|list<scalar|Param|null>,
+ *             prompts?: Param|string|list<scalar|Param|null>,
+ *             resources?: Param|string|list<scalar|Param|null>,
+ *             resource_templates?: Param|string|list<scalar|Param|null>,
+ *             apps?: Param|string|list<scalar|Param|null>,
+ *             ...<string, mixed>
+ *         },
+ *     }>,
+ *     clients?: list<array{ // Default: []
+ *         client_info?: array{ // Identity advertised to every remote server of this client during the initialize handshake.
+ *             name?: string|Param, // Defaults to the configuration key. // Default: null
+ *             version?: string|Param, // Default: "0.0.1"
+ *             description?: string|Param, // Default: null
+ *         },
+ *         protocol_version?: "2024-11-05"|"2025-03-26"|"2025-06-18"|"2025-11-25"|"2026-07-28"|Param, // MCP protocol version to negotiate. Leave unset to keep the SDK default. // Default: null
+ *         capabilities?: array{ // Client capabilities advertised during the handshake. "roots", "sampling" and "elicitation" are derived from the handlers configured below.
+ *             roots_list_changed?: bool|Param, // Default: false
+ *         },
+ *         roots?: string|Param, // Service id implementing Mcp\Client\Handler\Request\RootsCallbackInterface. Answers the server's "roots/list" requests. // Default: null
+ *         sampling?: string|Param, // Service id implementing Mcp\Client\Handler\Request\SamplingCallbackInterface. Enables the "sampling" capability. // Default: null
+ *         elicitation?: string|Param, // Service id implementing Mcp\Client\Handler\Request\ElicitationCallbackInterface. Enables the "elicitation" capability. // Default: null
+ *         forward_server_logs?: bool|Param, // Forward logging notifications received from the remote servers to the "mcp" logger channel. // Default: true
+ *         init_timeout?: int|Param, // Default: 30
+ *         request_timeout?: int|Param, // Default: 120
+ *         max_retries?: int|Param, // Default: 3
+ *         servers?: list<array{ // Default: []
+ *             transport?: "stdio"|"http"|Param, // How the server is reached: as a child process (stdio) or over a remote HTTP endpoint (http).
+ *             command?: list<scalar|Param|null>,
+ *             cwd?: string|Param, // Working directory of the stdio child process. // Default: null
+ *             env?: list<scalar|Param|null>,
+ *             inherit_env?: bool|Param, // Merge "env" on top of the current process environment instead of replacing it. // Default: true
+ *             max_buffer_size?: int|Param, // Maximum bytes buffered while waiting for a newline. Defaults to the SDK value. // Default: null
+ *             url?: string|Param, // Endpoint URL of the remote MCP server. // Default: null
+ *             headers?: list<scalar|Param|null>,
+ *             http_client?: string|Param, // Service id of a PSR-18 HTTP client. Defaults to "psr18.http_client" when available. // Default: null
+ *             max_sse_buffer_bytes?: int|Param, // Maximum bytes buffered per SSE event. Defaults to the SDK value. // Default: null
+ *             init_timeout?: int|Param, // Overrides the client-level value. // Default: null
+ *             request_timeout?: int|Param, // Overrides the client-level value. // Default: null
+ *             max_retries?: int|Param, // Overrides the client-level value. // Default: null
+ *         }>,
+ *     }>,
  * }
  * @psalm-type ConfigType = array{
  *     imports?: ImportsConfig,

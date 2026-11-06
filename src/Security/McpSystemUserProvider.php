@@ -10,7 +10,7 @@ class McpSystemUserProvider implements UserProviderInterface
     public function loadUserByIdentifier(string $identifier): UserInterface
     {
         if ('mcp-system' !== $identifier) {
-            throw new \Symfony\Component\Security\Core\Exception\UsernameNotFoundException();
+            throw new \Symfony\Component\Security\Core\Exception\UserNotFoundException();
         }
 
         return new McpSystemUser();

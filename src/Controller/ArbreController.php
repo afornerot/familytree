@@ -110,7 +110,7 @@ class ArbreController extends AbstractController
     {
         $individu = $em->getRepository(Individu::class)->find($id);
         if (!$individu) {
-            return new JsonResponse(['error' => 'Individu non trouvé.'], 404);
+            return new JsonResponse(['error' => 'Individu non trouvé.'], \Symfony\Component\HttpFoundation\Response::HTTP_NOT_FOUND);
         }
 
         $allIds = [$individu];
