@@ -7,7 +7,7 @@ use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\DateType;
-use Symfony\Component\Form\Extension\Core\Type\HiddenType;
+use Bnine\FilesBundle\Form\Type\IconUploadType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
@@ -93,9 +93,20 @@ class IndividuType extends AbstractType
         ;
 
         if (!$isNew) {
-            $builder->add('photo', HiddenType::class, [
+            $individu = $builder->getData();
+
+            $builder->add('photo', IconUploadType::class, [
                 'label' => false,
                 'required' => false,
+                'icon_label' => 'Photo',
+                'icon_empty_preview' => 'medias/avatar/noavatar.png',
+                'icon_domain' => 'individu',
+                'icon_entity_id' => $individu instanceof Individu ? ($individu->getId() ?? 0) : 0,
+                'crop' => true,
+                'crop_ratio' => '1/1',
+                'crop_min_size' => 300,
+                'preview_max_height' => 100,
+                'img_class' => 'bigavatar',
             ]);
         }
     }

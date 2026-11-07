@@ -188,25 +188,7 @@
                             <i class="fas fa-camera"></i> Photo de profil
                         </div>
                         <div class="card-body text-center">
-                            <div id="photo-preview" class="mb-2">
-                                {% if individu.photo %}
-                                    <img src="{{ bninefile(individu.photo) }}"
-                                         class="bigavatar"
-                                         alt="Photo de {{ individu.nomComplet }}">
-                                {% else %}
-                                    <i class="fas fa-user-circle fa-8x text-muted"></i>
-                                {% endif %}
-                            </div>
                             {{ form_widget(form.photo) }}
-                            <a class="btn btn-info btn-block"
-                               onclick="BnineModalOpen({
-                                   id:'bnine-modal-photo',
-                                   title:'Photo de profil',
-                                   url:'{{ path('bninefiles_files_uploadmodal', {domain:'individu', id:individu.id}) }}?crop',
-                                   currentInput:'individu_photo'
-                               })">
-                                <i class="fas fa-camera"></i> Modifier la photo
-                            </a>
                         </div>
                     </div>
 
@@ -306,12 +288,6 @@
                 });
             });
 
-            document.addEventListener('bnine-modal-closed', function() {
-                var val = $('#individu_photo').val();
-                if (val) {
-                    $('#photo-preview').html('<img src="' + BnineFileUrl(val) + '" class="bigavatar" alt="Photo">');
-                }
-            });
         });
     </script>
 {% endblock %}
