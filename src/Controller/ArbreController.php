@@ -10,6 +10,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Bnine\FilesBundle\Twig\BnineFileExtension;
 use SortDirection;
 
 class ArbreController extends AbstractController
@@ -29,7 +30,7 @@ class ArbreController extends AbstractController
     }
 
     #[Route('/arbre/data', name: 'app_arbre_data')]
-    public function data(IndividuRepository $individuRepository, MariageRepository $mariageRepository): JsonResponse
+    public function data(IndividuRepository $individuRepository, MariageRepository $mariageRepository, BnineFileExtension $bninefile): JsonResponse
     {
         $individus = $individuRepository->findBy([], ['nomNaissance' => SortDirection::Ascending]);
         $mariages = $mariageRepository->findAll();
@@ -92,7 +93,7 @@ class ArbreController extends AbstractController
                     'birthday' => $individu->getDateNaissance() ? $individu->getDateNaissance()->format('d/m/Y') : '',
                     'death' => $individu->getDateDeces() ? $individu->getDateDeces()->format('d/m/Y') : '',
                     'lieu naissance' => $individu->getLieuNaissance() ?: '',
-                    'avatar' => $individu->getPhoto() ?: '',
+                    'avatar' => $bninefile->bninefile($individu->getPhoto()),
                 ],
                 'rels' => [
                     'parents' => $parentsOf[$id] ?? [],
@@ -106,7 +107,7 @@ class ArbreController extends AbstractController
     }
 
     #[Route('/individu/{id}/family-data', name: 'app_individu_family_data')]
-    public function individuData(int $id, EntityManagerInterface $em): JsonResponse
+    public function individuData(int $id, EntityManagerInterface $em, BnineFileExtension $bninefile): JsonResponse
     {
         $individu = $em->getRepository(Individu::class)->find($id);
         if (!$individu) {
@@ -189,7 +190,7 @@ class ArbreController extends AbstractController
                     'birthday' => $i->getDateNaissance() ? $i->getDateNaissance()->format('d/m/Y') : '',
                     'death' => $i->getDateDeces() ? $i->getDateDeces()->format('d/m/Y') : '',
                     'lieu naissance' => $i->getLieuNaissance() ?: '',
-                    'avatar' => $i->getPhoto() ?: '',
+                    'avatar' => $bninefile->bninefile($i->getPhoto()),
                 ],
                 'rels' => [
                     'parents' => $parentsOf[$iid] ?? [],
@@ -203,7 +204,7 @@ class ArbreController extends AbstractController
     }
 
     #[Route('/arbre/orphelins', name: 'app_arbre_orphelins')]
-    public function orphelins(IndividuRepository $individuRepository): JsonResponse
+    public function orphelins(IndividuRepository $individuRepository, BnineFileExtension $bninefile): JsonResponse
     {
         $orphelins = $individuRepository->findOrphelins();
 
@@ -214,7 +215,7 @@ class ArbreController extends AbstractController
                 'nomComplet' => $individu->getNomComplet(),
                 'sexe' => $individu->getSexe(),
                 'dateNaissance' => $individu->getDateNaissance() ? $individu->getDateNaissance()->format('Y') : null,
-                'photo' => $individu->getPhoto(),
+                'photo' => $bninefile->bninefile($individu->getPhoto()),
             ];
         }
 
