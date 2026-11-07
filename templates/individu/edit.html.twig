@@ -190,7 +190,7 @@
                         <div class="card-body text-center">
                             <div id="photo-preview" class="mb-2">
                                 {% if individu.photo %}
-                                    <img src="{{ individu.photo }}"
+                                    <img src="{{ bninefile(individu.photo) }}"
                                          class="bigavatar"
                                          alt="Photo de {{ individu.nomComplet }}">
                                 {% else %}
@@ -309,7 +309,7 @@
             document.addEventListener('bnine-modal-closed', function() {
                 var val = $('#individu_photo').val();
                 if (val) {
-                    $('#photo-preview').html('<img src="' + val + '" class="bigavatar" alt="Photo">');
+                    $('#photo-preview').html('<img src="' + BnineFileUrl(val) + '" class="bigavatar" alt="Photo">');
                 }
             });
         });

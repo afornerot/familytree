@@ -21,7 +21,7 @@
             <div class="card mb-3">
                 <div class="card-body text-center">
                     {% if individu.photo %}
-                        <img src="{{ individu.photo }}"
+                        <img src="{{ bninefile(individu.photo) }}"
                              class="rounded-circle mb-3"
                              style="width:150px; height:150px; object-fit:cover;"
                              alt="{{ individu.nomComplet }}">

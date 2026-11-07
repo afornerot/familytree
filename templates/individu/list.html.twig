@@ -42,7 +42,7 @@
                         </td>
                         <td>
                             {% if individu.photo %}
-                                <img class="avatar" src="{{ individu.photo }}">
+                                <img class="avatar" src="{{ bninefile(individu.photo) }}">
                             {% else %}
                                 <i class="fas fa-user-circle fa-2x text-muted"></i>
                             {% endif %}
